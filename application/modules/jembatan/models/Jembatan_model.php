@@ -130,6 +130,17 @@ class Jembatan_model extends CI_Model
         return $query->result_array();
     }
 
+    public function getKategoriPenilaianBaru($idJembatan){
+        $this->db->select('j.id as id_jembatan, kb.id as id_bobot, kb.nama as nama_bobot, kb.bobot, kn.*');
+        $this->db->from('jembatan j');
+        $this->db->join('kategori_nilai kn', 'j.id = kn.id_jembatan', 'left');
+        $this->db->join('kategori_bobot kb', 'kn.id_kategori = kb.id', 'left');
+        $this->db->where('j.id', $idJembatan);
+        $this->db->order_by('kb.id', 'ASC');
+        $query = $this->db->get();
+        return $query->result_array();
+    }
+
     //insert/update/delete jembatan functions
     public function insertJembatan($params){
         $result = $this->db->insert('jembatan', $params);
@@ -204,6 +215,21 @@ class Jembatan_model extends CI_Model
     public function deleteSkor($idJembatan) {
         $this->db->where('id_jembatan', $idJembatan);
         $this->db->delete('skor_prioritas');
+    }
+
+    public function insertNilaiBaru($params) {
+        $result = $this->db->insert_batch('kategori_nilai', $params);
+        return array($result,$this->db->insert_id());
+    }
+
+    public function updateNilaiBaru($conditions, $params) {
+        $this->db->where($conditions);
+        $this->db->update('kategori_nilai', $params);
+    }
+
+    public function deleteNilaiBaru($idJembatan) {
+        $this->db->where('id_jembatan', $idJembatan);
+        $this->db->delete('kategori_nilai');
     }
 
 }

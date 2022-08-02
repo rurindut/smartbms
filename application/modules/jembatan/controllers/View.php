@@ -62,16 +62,34 @@ class View extends MY_Controller {
                 }
             }
 
+            $this->data['dataNilaiBaru'] = $this->jembatan_model->getKategoriPenilaianBaru($id);
+
             $this->render_page('jembatan/detail',$this->data);
             
         } else {
-			$this->render_page('jembatan/tambah',$this->data);
+			redirect('homepage/dashboard');
 		}
 		
     }
 
     function tambah_data() {
-        $this->detail();
+        $this->data['page_title'] = "Detail Jembatan";
+        $this->data['nk_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Nilai Kondisi');
+        $this->data['umur_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Umur');
+        $this->data['lingkungan_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Lingkungan');
+        $this->data['beban_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Beban');
+        $this->data['bencana_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Bencana Alam');
+        $this->data['lhr_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('LHR');
+        $this->data['lajur_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Jumlah Lajur');
+        $this->data['aspal_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Kondisi permukaan aspal');
+        $this->data['drainase_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Sistem Drainase');
+        $this->data['historis_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Kepentingan Historis Jembatan');
+        $this->data['sosial_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Sosial');
+        $this->data['ekonomi_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Ekonomi');
+        $this->data['politik_options'] = $this->jembatan_model->getBobotKriteriaOptionsBySubKriteria('Politik');
+        $this->data['action_url'] = base_url()."jembatan/view/save";
+
+        $this->render_page('jembatan/tambah',$this->data);
     }
     
     public function save() {
@@ -159,6 +177,40 @@ class View extends MY_Controller {
             $this->jembatan_model->insertFungsional($param_fungsional);
             $param_nonteknis['id_jembatan'] = $id_jembatan;
             $this->jembatan_model->insertNonteknis($param_nonteknis);
+
+            $param_nilaibaru = [
+                array(
+                   'id_jembatan' => $id_jembatan,
+                   'nama_jembatan' => $_POST['nama'],
+                   'id_kategori' => 1
+                ),
+                array(
+                   'id_jembatan' => $id_jembatan,
+                   'nama_jembatan' => $_POST['nama'],
+                   'id_kategori' => 2
+                ),
+                array(
+                   'id_jembatan' => $id_jembatan,
+                   'nama_jembatan' => $_POST['nama'],
+                   'id_kategori' => 3
+                ),
+                array(
+                   'id_jembatan' => $id_jembatan,
+                   'nama_jembatan' => $_POST['nama'],
+                   'id_kategori' => 4
+                ),
+                array(
+                   'id_jembatan' => $id_jembatan,
+                   'nama_jembatan' => $_POST['nama'],
+                   'id_kategori' => 5
+                ),
+                array(
+                   'id_jembatan' => $id_jembatan,
+                   'nama_jembatan' => $_POST['nama'],
+                   'id_kategori' => 6
+                )
+            ];
+            $this->jembatan_model->insertNilaiBaru($param_nilaibaru);
 
             redirect('homepage/dashboard');
         }
@@ -330,6 +382,7 @@ class View extends MY_Controller {
             $this->jembatan_model->deleteFungsional($id);
             $this->jembatan_model->deleteNonTeknis($id);
             $this->jembatan_model->deleteSkor($id);
+            $this->jembatan_model->deleteNilaiBaru($id);
         }
         redirect('homepage/dashboard');
     }
@@ -592,6 +645,47 @@ class View extends MY_Controller {
         $y1Denormalisasi = abs($meanY1 + ($sdY1 * $y1Normalisasi));
         
         return $y1Denormalisasi;
+    }
+
+    public function save_opsi_baru() {
+        // POST data
+        $postData = $this->input->post();
+
+        $kondisi = [
+            "id_kategori" => $postData["id_bobot"],
+            "id_jembatan" => $postData["id_jembatan"]
+        ];
+        $params = [
+            $postData["kolom"] => $postData["value"]
+        ];
+
+        $data = $this->jembatan_model->updateNilaiBaru($kondisi,$params);
+
+        $dataNilaiBaru = $this->jembatan_model->getKategoriPenilaianBaru($postData["id_jembatan"]);
+        $totalTanpaPemeliharaan = 0;
+        $totalPemeliharaanRutin = 0;
+        $totalRehabilitasi = 0;
+        $totalPenggantian = 0;
+        foreach ($dataNilaiBaru as $dataNilai) {
+            $totalTanpaPemeliharaan += ($dataNilai['tanpa_pemeliharaan'] * $dataNilai['bobot']);
+            $totalPemeliharaanRutin += ($dataNilai['pemeliharaan_rutin'] * $dataNilai['bobot']);
+            $totalRehabilitasi += ($dataNilai['rehabilitasi'] * $dataNilai['bobot']);
+            $totalPenggantian += ($dataNilai['penggantian'] * $dataNilai['bobot']);
+        }
+        $totalArray = [
+            'tanpa_pemeliharaan' => number_format($totalTanpaPemeliharaan,3),
+            'pemeliharaan_rutin' => number_format($totalPemeliharaanRutin,3),
+            'rehabilitasi' => number_format($totalRehabilitasi,3),
+            'penggantian' => number_format($totalPenggantian,3)
+        ];
+        $maxs = array_keys($totalArray, max($totalArray));
+        $hasilPenilaian = (!empty($maxs)) ? str_replace('_',' ',$maxs[0]) : 'tidak ada pemeliharaan';
+
+        $result = [
+            'nilai_akhir' => $totalArray,
+            'hasil_penilaian' => ucwords($hasilPenilaian)." adalah penanganan terbaik"
+        ];
+        echo json_encode($result);
     }
 
 }

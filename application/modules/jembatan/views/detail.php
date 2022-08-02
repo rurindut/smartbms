@@ -23,8 +23,8 @@
 
                 var biaya_ganti = (response.biaya_ganti) ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(response.biaya_ganti) : '';
                 var biaya_rehab = (response.biaya_rehab) ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(response.biaya_rehab) : '';
-                $('td.biaya_ganti').html(biaya_ganti);
-                $('td.biaya_rehab').html(biaya_rehab);
+                // $('td.biaya_ganti').html(biaya_ganti);
+                // $('td.biaya_rehab').html(biaya_rehab);
 
                 var pemeliharaan = response.pemeliharaan;
                 var kerusakan1 = (pemeliharaan.length > 0) ? pemeliharaan[0][0].toFixed(3) : '';
@@ -38,21 +38,38 @@
                 var biaya4 = (pemeliharaan.length > 0) ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(pemeliharaan[1][3]) : '';
                 var biaya5 = (pemeliharaan.length > 0) ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(pemeliharaan[1][4]) : '';
 
-                $('td.kerusakan1').html(kerusakan1);
-                $('td.kerusakan2').html(kerusakan1);
-                $('td.kerusakan3').html(kerusakan1);
-                $('td.kerusakan4').html(kerusakan1);
-                $('td.kerusakan5').html(kerusakan1);
+                // $('td.kerusakan1').html(kerusakan1);
+                // $('td.kerusakan2').html(kerusakan1);
+                // $('td.kerusakan3').html(kerusakan1);
+                // $('td.kerusakan4').html(kerusakan1);
+                // $('td.kerusakan5').html(kerusakan1);
 
-                $('td.biaya1').html(biaya1);
-                $('td.biaya2').html(biaya2);
-                $('td.biaya3').html(biaya3);
-                $('td.biaya4').html(biaya4);
-                $('td.biaya5').html(biaya5);
+                // $('td.biaya1').html(biaya1);
+                // $('td.biaya2').html(biaya2);
+                // $('td.biaya3').html(biaya3);
+                // $('td.biaya4').html(biaya4);
+                // $('td.biaya5').html(biaya5);
 
             }
         });
     };
+
+    function save_opsi_baru(elemen,id_jembatan,id_bobot,kolom){
+        $.ajax({
+            url:'<?=base_url()?>jembatan/view/save_opsi_baru',
+            method: 'post',
+            data: {id_jembatan: id_jembatan,id_bobot:id_bobot,kolom:kolom, value:elemen.value},
+            dataType: 'json',
+            success: function(response){
+                console.log(response);
+                $('td#totalnoservice').html(response.nilai_akhir.tanpa_pemeliharaan);
+                $('td#totalminorrehab').html(response.nilai_akhir.pemeliharaan_rutin);
+                $('td#totalmayorrehab').html(response.nilai_akhir.rehabilitasi);
+                $('td#totalreplace').html(response.nilai_akhir.penggantian);
+                $('div.result').html(response.hasil_penilaian);
+            }
+        });
+    }
 </script>
 <style type="text/css">
     table#tabel_pemeliharaan th {
@@ -83,6 +100,9 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="skorprioritas-tab" data-toggle="tab" href="#skorprioritas" role="tab" aria-controls="skorprioritas" aria-selected="false">Skor Prioritas Jembatan</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="kategoripenanganan-tab" data-toggle="tab" href="#kategoripenanganan" role="tab" aria-controls="kategoripenanganan" aria-selected="false">Kategori Penanganan</a>
                 </li>
             </ul>
             <div class="tab-content pl-3 p-1" id="myTabContent">
@@ -798,8 +818,8 @@
                                 <th scope="col">Skor Prioritas Non-Teknis</th>
                                 <th scope="col">Skor Prioritas Jembatan</th>
                                 <th scope="col">Kategori Penanganan</th>
-                                <th scope="col">Biaya Penggantian</th>
-                                <th scope="col">Biaya Rehab</th>
+                                <!-- <th scope="col">Biaya Penggantian</th>
+                                <th scope="col">Biaya Rehab</th> -->
                             </tr>
                             </thead>
                             <tbody>
@@ -809,13 +829,16 @@
                                 <td class="skor_nonteknis"><?= (isset($skor_prioritas['skor_nonteknis']))?number_format($skor_prioritas['skor_nonteknis'],3):0.000 ?></td>
                                 <td class="skor_total"><?= (isset($skor_prioritas['skor_total']))?number_format($skor_prioritas['skor_total'],3):0.000 ?></td>
                                 <td class="penanganan"><?= (isset($skor_prioritas['kategori_penanganan']))?$skor_prioritas['kategori_penanganan']:'Data tidak lengkap' ?></td>
+                                <?php /*
                                 <td class="biaya_ganti"><?= ($skor_prioritas['penanganan_id'] > 3) ? 'Rp '.number_format($biayaReplace,2,',','.') : '' ?></td>
                                 <td class="biaya_rehab"><?= ($skor_prioritas['penanganan_id'] == 3) ? 'Rp '.number_format($biayaRehab,2,',','.') : '' ?></td>
+                                */ ?>
                             </tr>
                             </tbody>
                         </table>
                     </div>
 
+                    <?php /*
                     <h3>Prediksi Kuantitas Kerusakan</h3>
                     <p></p>
                     <div class="col-lg-12">
@@ -851,6 +874,72 @@
                                 <td class="biaya5"><?= (!empty($biaya[4]))?'Rp '.number_format($biaya[4],2,',','.'):'' ?></td>
                             </tbody>
                         </table>
+                    </div>
+                    */ ?>
+                </div>
+                <div class="tab-pane fade" id="kategoripenanganan" role="tabpanel" aria-labelledby="kategoripenanganan-tab">
+                    <h3>Kategori Penanganan</h3>
+                    <p></p>
+                    <div class="col-lg-12">
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th scope="col">&nbsp;</th>
+                                <th scope="col">Bobot</th>
+                                <th scope="col">Tidak ada pemeliharaan</th>
+                                <th scope="col">Pemeliharaan rutin</th>
+                                <th scope="col">Rehabilitasi</th>
+                                <th scope="col">Penggantian</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $totalTanpaPemeliharaan = 0;
+                                $totalPemeliharaanRutin = 0;
+                                $totalRehabilitasi = 0;
+                                $totalPenggantian = 0;
+                                foreach ($dataNilaiBaru as $dataNilai) {
+                                ?>
+                                <tr>
+                                    <td><i><?= $dataNilai['nama_bobot'] ?></i></td>
+                                    <td><?= $dataNilai['bobot'] ?>%</td>
+                                    <td><input type="text" id="tanpa_pemeliharaan[<?= $dataNilai['id_bobot'] ?>]" name="tanpa_pemeliharaan[<?= $dataNilai['id_bobot'] ?>]" class="form-control" value="<?= $dataNilai['tanpa_pemeliharaan'] ?>" onkeyup="save_opsi_baru(this,'<?= $dataNilai['id_jembatan'] ?>','<?= $dataNilai['id_bobot'] ?>','tanpa_pemeliharaan');"></td>
+                                    <td><input type="text" id="pemeliharaan_rutin[<?= $dataNilai['id_bobot'] ?>]" name="pemeliharaan_rutin[<?= $dataNilai['id_bobot'] ?>]" class="form-control" value="<?= $dataNilai['pemeliharaan_rutin'] ?>" onkeyup="save_opsi_baru(this,'<?= $dataNilai['id_jembatan'] ?>','<?= $dataNilai['id_bobot'] ?>','pemeliharaan_rutin');"></td>
+                                    <td><input type="text" id="rehabilitasi[<?= $dataNilai['id_bobot'] ?>]" name="rehabilitasi[<?= $dataNilai['id_bobot'] ?>]" class="form-control" value="<?= $dataNilai['rehabilitasi'] ?>" onkeyup="save_opsi_baru(this,'<?= $dataNilai['id_jembatan'] ?>','<?= $dataNilai['id_bobot'] ?>','rehabilitasi');"></td>
+                                    <td><input type="text" id="penggantian[<?= $dataNilai['id_bobot'] ?>]" name="penggantian[<?= $dataNilai['id_bobot'] ?>]" class="form-control" value="<?= $dataNilai['penggantian'] ?>" onkeyup="save_opsi_baru(this,'<?= $dataNilai['id_jembatan'] ?>','<?= $dataNilai['id_bobot'] ?>','penggantian');"></td>
+                                </tr>
+                                <?php
+                                    $totalTanpaPemeliharaan += ($dataNilai['tanpa_pemeliharaan'] * $dataNilai['bobot']);
+                                    $totalPemeliharaanRutin += ($dataNilai['pemeliharaan_rutin'] * $dataNilai['bobot']);
+                                    $totalRehabilitasi += ($dataNilai['rehabilitasi'] * $dataNilai['bobot']);
+                                    $totalPenggantian += ($dataNilai['penggantian'] * $dataNilai['bobot']);
+                                }
+                                ?>
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td id="totalnoservice"><?= number_format($totalTanpaPemeliharaan,3)?></td>
+                                <td id="totalminorrehab"><?= number_format($totalPemeliharaanRutin,3) ?></td>
+                                <td id="totalmayorrehab"><?= number_format($totalRehabilitasi,3) ?></td>
+                                <td id="totalreplace"><?= number_format($totalPenggantian,3) ?></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php 
+                        $totalArray = [
+                            'tanpa_pemeliharaan' => $totalTanpaPemeliharaan,
+                            'pemeliharaan_rutin' => $totalPemeliharaanRutin,
+                            'rehabilitasi' => $totalRehabilitasi,
+                            'penggantian' => $totalPenggantian
+                        ];
+                        $maxs = array_keys($totalArray, max($totalArray));
+                        $hasilPenilaian = (!empty($maxs)) ? str_replace('_',' ',$maxs[0]) : 'tidak ada pemeliharaan';
+                    ?>
+                    <div class="result">
+                        <?php 
+                        echo ucwords($hasilPenilaian)." adalah penanganan terbaik";
+                        ?>
                     </div>
                 </div>
                 </form>
